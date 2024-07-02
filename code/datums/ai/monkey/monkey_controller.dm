@@ -127,6 +127,10 @@ have ways of interacting with a specific mob and control it.
 	for(var/obj/item/item in oview(2, living_pawn))
 		nearby_items += item
 
+	for(var/obj/item/item in living_pawn.held_items) // If we've got some garbage in out hands thats going to stop us from effectivly attacking, we should get rid of it.
+		if(item.force < 2)
+			living_pawn.dropItemToGround(item)
+
 	weapon = GetBestWeapon(src, nearby_items, living_pawn.held_items)
 
 	var/pickpocket = FALSE
@@ -136,6 +140,9 @@ have ways of interacting with a specific mob and control it.
 			continue
 		pickpocket = TRUE
 		weapon = held_weapon
+
+	if(weapon.force < 2) // our bite does 2 damage on avarage, no point in settling for anything less
+		return FALSE
 
 	if(!weapon || (weapon in living_pawn.held_items))
 		return FALSE
@@ -190,7 +197,7 @@ have ways of interacting with a specific mob and control it.
 
 /datum/ai_controller/monkey/proc/on_hitby(datum/source, atom/movable/AM, skipcatch = FALSE, hitpush = TRUE, blocked = FALSE, datum/thrownthing/throwingdatum)
 	SIGNAL_HANDLER
-	if(istype(AM, /obj/item))
+	if(isitem(AM))
 		var/mob/living/living_pawn = pawn
 		var/obj/item/I = AM
 		var/mob/thrown_by = I.thrownby?.resolve()

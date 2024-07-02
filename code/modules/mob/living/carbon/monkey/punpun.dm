@@ -1,6 +1,7 @@
 /mob/living/carbon/monkey/punpun //except for a few special persistence features, pun pun is just a normal monkey
 	name = "Pun Pun" //C A N O N
-	unique_name = 0
+	unique_name = TRUE
+	ai_controller = /datum/ai_controller/monkey/pun_pun
 	var/ancestor_name
 	var/ancestor_chain = 1
 	var/relic_hat	//Note: relic_hat and relic_mask are paths

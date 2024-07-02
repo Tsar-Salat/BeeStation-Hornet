@@ -34,6 +34,9 @@
 		COOLDOWN_START(src, ring_cooldown, ring_cooldown_length)
 	return TRUE
 
+/obj/structure/desk_bell/attack_paw(mob/user, list/modifiers)
+	return attack_hand(user, modifiers)
+
 /obj/structure/desk_bell/attackby(obj/item/I, mob/user, params)
 	. = ..()
 	times_rang += I.force

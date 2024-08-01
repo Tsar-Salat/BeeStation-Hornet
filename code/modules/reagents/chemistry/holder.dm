@@ -348,7 +348,6 @@
 				need_mob_update += R.on_mob_life(C)
 	if(C && need_mob_update) //some of the metabolized reagents had effects on the mob that requires some updates.
 		C.updatehealth()
-		C.update_mobility()
 		C.update_stamina()
 	update_total()
 

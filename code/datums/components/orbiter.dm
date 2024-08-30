@@ -173,10 +173,11 @@
 /atom/movable/proc/orbit(atom/A, radius = 10, clockwise = FALSE, rotation_speed = 20, rotation_segments = 36, pre_rotation = TRUE)
 	if(!istype(A) || !get_turf(A) || A == src)
 		return
-
+	orbit_target = A
 	return A.AddComponent(/datum/component/orbiter, src, radius, clockwise, rotation_speed, rotation_segments, pre_rotation)
 
 /atom/movable/proc/stop_orbit(datum/component/orbiter/orbits)
+	orbit_target = null
 	return // We're just a simple hook
 
 /// includes_everyone=FALSE: when an orbitted mob is a camera eye or something. That shouldn't transfer revenants.

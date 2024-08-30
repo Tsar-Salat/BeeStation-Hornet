@@ -35,7 +35,7 @@
 /obj/anomaly/singularity/Initialize(mapload, starting_energy = 50)
 	. = ..()
 	START_PROCESSING(SSsinguloprocess, src)
-	AddElement(/datum/element/point_of_interest)
+	SSpoints_of_interest.make_point_of_interest(src)
 	GLOB.singularities |= src
 
 	var/datum/component/singularity/new_component = AddComponent(

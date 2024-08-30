@@ -51,15 +51,16 @@
 	var/list/spawnerlist = GLOB.mob_spawners[group_name]
 	if(!LAZYLEN(spawnerlist))
 		return
-	var/atom/movable/MS = pick(spawnerlist)
-	if(!istype(MS) || !(MS in GLOB.poi_list))
+	var/obj/effect/mob_spawn/mob_spawner = pick(spawnerlist)
+	if(!istype(mob_spawner) || !SSpoints_of_interest.get_poi_atom_by_ref(mob_spawner))
 		return
+
 	switch(action)
 		if("jump")
-			if(MS)
-				usr.forceMove(get_turf(MS))
+			if(mob_spawner)
+				usr.forceMove(get_turf(mob_spawner))
 				. = TRUE
 		if("spawn")
-			if(MS)
-				MS.attack_ghost(usr)
+			if(mob_spawner)
+				mob_spawner.attack_ghost(usr)
 				. = TRUE

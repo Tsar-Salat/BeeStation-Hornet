@@ -50,7 +50,7 @@
 		if(isliving(wizard.current) && wizard.current.stat!=DEAD)
 			return FALSE
 
-	for(var/obj/item/phylactery/P in GLOB.poi_list) //TODO : IsProperlyDead()
+	for(var/obj/item/phylactery/P in SSpoints_of_interest.real_nuclear_disks) //TODO : IsProperlyDead()
 		if(P.mind && P.mind.has_antag_datum(/datum/antagonist/wizard))
 			return FALSE
 

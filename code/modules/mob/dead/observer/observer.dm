@@ -59,7 +59,6 @@ GLOBAL_VAR_INIT(observer_default_invisibility, INVISIBILITY_SPIRIT)
 	// Used for displaying in ghost chat, without changing the actual name
 	// of the mob
 	var/deadchat_name
-	var/datum/orbit_menu/orbit_menu
 
 /mob/dead/observer/Initialize(mapload)
 	set_invisibility(GLOB.observer_default_invisibility)
@@ -149,6 +148,8 @@ GLOBAL_VAR_INIT(observer_default_invisibility, INVISIBILITY_SPIRIT)
 	show_data_huds()
 	data_huds_on = 1
 
+
+	SSpoints_of_interest.make_point_of_interest(src)
 	AddComponent(/datum/component/tracking_beacon, "ghost", null, null, TRUE, "#9e4d91", TRUE, TRUE, "#490066")
 	AddElement(/datum/element/movetype_handler)
 	ADD_TRAIT(src, TRAIT_MOVE_FLOATING, "ghost")
@@ -180,7 +181,6 @@ GLOBAL_VAR_INIT(observer_default_invisibility, INVISIBILITY_SPIRIT)
 
 	updateallghostimages()
 
-	QDEL_NULL(orbit_menu)
 
 	var/datum/component/tracking_beacon/beacon = GetComponent(/datum/component/tracking_beacon)
 	if(beacon)
@@ -444,10 +444,7 @@ This is the proc mobs get to turn into a ghost. Forked from ghostize due to comp
 	set name = "Orbit" // "Haunt"
 	set desc = "Follow and orbit a mob."
 
-	if(!orbit_menu)
-		orbit_menu = new(src)
-
-	orbit_menu.ui_interact(src)
+	GLOB.orbit_menu.show(src)
 
 
 // This is the ghost's follow verb with an argument
@@ -491,26 +488,32 @@ This is the proc mobs get to turn into a ghost. Forked from ghostize due to comp
 	set name = "Jump to Mob"
 	set desc = "Teleport to a mob"
 
-	if(isobserver(usr)) //Make sure they're an observer!
+	if(!isobserver(usr)) //Make sure they're an observer!
+		return
 
+	var/list/possible_destinations = SSpoints_of_interest.get_mob_pois()
+	var/target = null
 
-		var/list/dest = list() //List of possible destinations (mobs)
-		var/target = null	   //Chosen target.
+	target = tgui_input_list(usr, "Please, select a player!", "Jump to Mob", possible_destinations)
+	if(isnull(target))
+		return
+	if (!isobserver(usr))
+		return
 
-		dest += getpois(mobs_only=1) //Fill list, prompt user with list
-		target = tgui_input_list(src, "Please, select a player!", "Jump to Mob", dest)
+	var/mob/destination_mob = possible_destinations[target] //Destination mob
 
-		if (!target)//Make sure we actually have a target
-			return
-		else
-			var/mob/M = dest[target] //Destination mob
-			var/mob/A = src			 //Source mob
-			var/turf/T = get_turf(M) //Turf of the destination mob
+	// During the break between opening the input menu and selecting our target, has this become an invalid option?
+	if(!SSpoints_of_interest.is_valid_poi(destination_mob))
+		return
 
-			if(T && isturf(T))	//Make sure the turf exists, then move the source to that destination.
-				A.abstract_move(T)
-			else
-				to_chat(A, "This mob is not located in the game world.")
+	var/mob/source_mob = src  //Source mob
+	var/turf/destination_turf = get_turf(destination_mob) //Turf of the destination mob
+
+	if(isturf(destination_turf))
+		source_mob.abstract_move(destination_turf)
+		//source_mob.update_parallax_contents()
+	else
+		to_chat(source_mob, "This mob is not located in the game world.")
 
 /mob/dead/observer/verb/change_view_range()
 	set category = "Ghost"
@@ -859,18 +862,32 @@ This is the proc mobs get to turn into a ghost. Forked from ghostize due to comp
 	set name = "Observe"
 	set category = "OOC"
 
-	var/list/creatures = getpois()
+	if(!isobserver(usr)) //Make sure they're an observer!
+		return
 
 	reset_perspective(null)
 
-	var/eye_name = null
+	var/list/possible_destinations = SSpoints_of_interest.get_mob_pois()
+	var/target = null
 
-	eye_name = tgui_input_list(src, "Please, select a player!", "Observe", creatures)
+	target = input("Please, select a player!", "Jump to Mob", null, null) as null|anything in possible_destinations
 
-	if (!eye_name)
+	if (!target || !isobserver(usr))
 		return
 
-	var/mob/mob_eye = creatures[eye_name]
+	var/mob/chosen_target = possible_destinations[target]
+
+	// During the break between opening the input menu and selecting our target, has this become an invalid option?
+	if(!SSpoints_of_interest.is_valid_poi(chosen_target))
+		return
+
+	do_observe(chosen_target)
+
+/mob/dead/observer/proc/do_observe(mob/mob_eye)
+	if(isnewplayer(mob_eye))
+		stack_trace("/mob/dead/new_player: \[[mob_eye]\] is being observed by [key_name(src)]. This should never happen and has been blocked.")
+		message_admins("[ADMIN_LOOKUPFLW(src)] attempted to observe someone in the lobby: [ADMIN_LOOKUPFLW(mob_eye)]. This should not be possible and has been blocked.")
+		return
 	//Istype so we filter out points of interest that are not mobs
 	if(client && mob_eye && istype(mob_eye))
 		client.set_eye(mob_eye)

@@ -105,7 +105,7 @@
 	. = ..()
 	become_hearing_sensitive()
 	votes = list()
-	AddElement(/datum/element/point_of_interest)
+	SSpoints_of_interest.make_point_of_interest(src)
 
 /obj/item/toy/eightball/haunted/MakeHaunted()
 	return FALSE

@@ -95,7 +95,7 @@
 	name = "lesser phylactery of [mind.name]"
 
 	active_phylacteries++
-	AddElement(/datum/element/point_of_interest)
+	SSpoints_of_interest.make_point_of_interest(src)
 	START_PROCESSING(SSobj, src)
 
 /obj/item/lesserphylactery/Destroy(force=FALSE)

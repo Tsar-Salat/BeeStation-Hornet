@@ -213,7 +213,7 @@
 
 /obj/machinery/capture_the_flag/Initialize(mapload)
 	. = ..()
-	AddElement(/datum/element/point_of_interest)
+	SSpoints_of_interest.make_point_of_interest(src)
 
 /obj/machinery/capture_the_flag/process(delta_time)
 	for(var/mob/living/living_participant as anything in spawned_mobs)

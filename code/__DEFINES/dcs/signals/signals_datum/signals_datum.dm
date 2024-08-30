@@ -68,6 +68,11 @@
 
 #define COMSIG_GREYSCALE_CONFIG_REFRESHED "greyscale_config_refreshed"
 
+// Point of interest signals
+/// Sent from base of /datum/controller/subsystem/points_of_interest/proc/on_poi_element_added : (atom/new_poi)
+#define COMSIG_ADDED_POINT_OF_INTEREST "added_point_of_interest"
+/// Sent from base of /datum/controller/subsystem/points_of_interest/proc/on_poi_element_removed : (atom/old_poi)
+#define COMSIG_REMOVED_POINT_OF_INTEREST "removed_point_of_interest"
 
 // /datum/component/two_handed signals
 #define COMSIG_TWOHANDED_WIELD "twohanded_wield"              //from base of datum/component/two_handed/proc/wield(mob/living/carbon/user): (/mob/user)

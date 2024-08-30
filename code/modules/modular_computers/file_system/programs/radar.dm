@@ -347,7 +347,7 @@
 	tracks_grand_z = TRUE
 
 /datum/computer_file/program/radar/fission360/find_atom()
-	return locate(selected) in GLOB.poi_list
+	return SSpoints_of_interest.get_poi_atom_by_ref(selected)
 
 /datum/computer_file/program/radar/fission360/scan()
 	if(!COOLDOWN_FINISHED(src, last_scan))
@@ -362,7 +362,7 @@
 			name = nuke.name,
 			)
 		objects += list(nukeinfo)
-	var/obj/item/disk/nuclear/disk = locate() in GLOB.poi_list
+	var/obj/item/disk/nuclear/disk = locate() in SSpoints_of_interest.real_nuclear_disks
 	var/list/nukeinfo = list(
 		ref = REF(disk),
 		name = "Nuke Auth. Disk",

@@ -116,6 +116,9 @@
 	///What directions this is currently smoothing with. IMPORTANT: This uses the smoothing direction flags as defined in icon_smoothing.dm, instead of the BYOND flags.
 	var/smoothing_junction = null //This starts as null for us to know when it's first set, but after that it will hold a 8-bit mask ranging from 0 to 255.
 
+	///Reference to atom being orbited
+	var/atom/orbit_target
+
 	///The config type to use for greyscaled sprites. Both this and greyscale_colors must be assigned to work.
 	var/greyscale_config
 	///A string of hex format colors to be used by greyscale sprites, ex: "#0054aa#badcff"
@@ -1953,3 +1956,31 @@ if (UNLINT(target.base_luminosity != new_value)) {\
 
 /atom/movable/proc/get_orbitable()
 	return src
+
+/**
+ * Recursive getter method to return a list of all ghosts orbitting this atom
+ *
+ * This will work fine without manually passing arguments.
+ * * processed - The list of atoms we've already convered
+ * * source - Is this the atom for who we're counting up all the orbiters?
+ * * ignored_stealthed_admins - If TRUE, don't count admins who are stealthmoded and orbiting this
+ */
+/atom/proc/get_all_orbiters(list/processed, source = TRUE, ignore_stealthed_admins = TRUE)
+	var/list/output = list()
+	if(!processed)
+		processed = list()
+	else if(src in processed)
+		return output
+
+	if(!source)
+		output += src
+
+	processed += src
+	for(var/atom/atom_orbiter as anything in orbit_datum?.current_orbiters)
+		output += atom_orbiter.get_all_orbiters(processed, source = FALSE)
+	return output
+
+/mob/get_all_orbiters(list/processed, source = TRUE, ignore_stealthed_admins = TRUE)
+	if(!source && ignore_stealthed_admins && client?.holder?.fakekey)
+		return list()
+	return ..()

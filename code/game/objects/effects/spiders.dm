@@ -106,7 +106,7 @@
 		ghost_ready = TRUE
 		LAZYADD(GLOB.mob_spawners[name], src)
 		SSmobs.update_spawners()
-		AddElement(/datum/element/point_of_interest)
+		SSpoints_of_interest.make_point_of_interest(src)
 	if(amount_grown >= grow_time *3)
 		make_AI_spider()
 
@@ -225,7 +225,7 @@
 	pixel_x = rand(6,-6)
 	pixel_y = rand(6,-6)
 	START_PROCESSING(SSobj, src)
-	AddElement(/datum/element/point_of_interest)
+	SSpoints_of_interest.make_point_of_interest(src)
 	AddComponent(/datum/component/swarming)
 
 /obj/structure/spider/spiderling/hunter

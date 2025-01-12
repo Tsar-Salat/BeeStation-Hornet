@@ -17,7 +17,7 @@
 			speak("unstun", TRUE)
 		else if(prob(60) && owner.health <= owner.crit_threshold)
 			speak("heal", TRUE)
-		else if(prob(30) && owner.a_intent == INTENT_HARM)
+		else if(prob(30) && owner.combat_mode)
 			speak("aggressive")
 		else
 			speak("neutral", prob(25))
@@ -67,7 +67,7 @@
 /datum/brain_trauma/special/ghost_control/on_lose()
 	var/datum/component/deadchat_control/D = owner.GetComponent(/datum/component/deadchat_control)
 	if(D)
-		D.RemoveComponent()
+		D.ClearFromParent()
 	..()
 
 
@@ -143,6 +143,10 @@
 		if(do_teleport(user, get_turf(linked_to), no_effects = TRUE))
 			user.visible_message("<span class='warning'>[user] [slip_in_message].</span>", null, null, null, user)
 			user.visible_message("<span class='warning'>[user] [slip_out_message].</span>", "<span class='notice'>...and find your way to the other side.</span>")
+
+/obj/effect/hallucination/simple/bluespace_stream/add_context_self(datum/screentip_context/context, mob/user, obj/item/item)
+	context.use_cache()
+	context.add_attack_hand_action("Teleport")
 
 /datum/brain_trauma/special/tenacity
 	name = "Tenacity"

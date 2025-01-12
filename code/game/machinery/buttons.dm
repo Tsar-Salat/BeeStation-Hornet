@@ -68,7 +68,7 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/machinery/button)
 		else
 			icon_state = skin
 
-/obj/machinery/button/attackby(obj/item/W, mob/user, params)
+/obj/machinery/button/attackby(obj/item/W, mob/living/user, params)
 	if(W.tool_behaviour == TOOL_SCREWDRIVER)
 		if(panel_open || allowed(user))
 			default_deconstruction_screwdriver(user, "button-open", "[skin]",W)
@@ -109,7 +109,7 @@ CREATION_TEST_IGNORE_SUBTYPES(/obj/machinery/button)
 		update_icon()
 		return
 
-	if(user.a_intent != INTENT_HARM && !(W.item_flags & NOBLUDGEON))
+	if(!user.combat_mode && !(W.item_flags & NOBLUDGEON))
 		return attack_hand(user)
 	else
 		return ..()
@@ -309,3 +309,19 @@ MAPPING_DIRECTIONAL_HELPERS(/obj/machinery/button/shieldwallgen, 24)
 
 /obj/machinery/button/shieldwallgen/connect_to_shuttle(obj/docking_port/mobile/port, obj/docking_port/stationary/dock)
 	id = "[REF(port)][id]"
+
+/obj/machinery/button/add_context_self(datum/screentip_context/context, mob/user)
+	if (length(req_access) || length(req_one_access) || req_access_txt != "0" || req_one_access_txt != "0")
+		context.add_access_context("Access Required", allowed(user))
+	if (context.accept_silicons())
+		if (!panel_open)
+			context.add_attack_hand_action("Activate")
+		return
+	if (panel_open)
+		if(device || board)
+			context.add_attack_hand_action("Remove Electronics")
+		else
+			context.add_attack_hand_action("Change Appearance")
+	else
+		context.add_attack_hand_action("Push")
+	context.add_left_click_item_action("Hack", /obj/item/card/emag)

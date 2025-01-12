@@ -185,6 +185,14 @@
 	else
 		toggle_mode()
 
+/obj/machinery/iv_drip/add_context_self(datum/screentip_context/context, mob/user, obj/item/item)
+	if (attached)
+		context.add_attack_hand_action("Detach [capitalize(attached.name)]")
+	else if (beaker)
+		context.add_attack_hand_action("Eject Beaker")
+	else
+		context.add_attack_hand_action("Toggle Mode")
+
 /obj/machinery/iv_drip/verb/eject_beaker()
 	set category = "Object"
 	set name = "Remove IV Container"
@@ -193,7 +201,8 @@
 	if(!isliving(usr))
 		to_chat(usr, "<span class='warning'>You can't do that!</span>")
 		return
-
+	if (!usr.canUseTopic())
+		return
 	if(usr.incapacitated())
 		return
 	if(beaker)
@@ -209,7 +218,8 @@
 	if(!isliving(usr))
 		to_chat(usr, "<span class='warning'>You can't do that!</span>")
 		return
-
+	if (!usr.canUseTopic())
+		return
 	if(usr.incapacitated())
 		return
 	mode = !mode
@@ -253,7 +263,6 @@
 		qdel(item)
 		new /obj/machinery/anesthetic_machine(loc)
 		qdel(src)
-
 
 /obj/machinery/iv_drip/saline
 	name = "saline drip"

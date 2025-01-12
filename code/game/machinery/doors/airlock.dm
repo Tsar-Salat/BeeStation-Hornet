@@ -139,6 +139,14 @@
 	RegisterSignal(src, COMSIG_COMPONENT_NTNET_RECEIVE, PROC_REF(ntnet_receive))
 	RegisterSignal(src, COMSIG_MACHINERY_BROKEN, PROC_REF(on_break))
 
+	register_context()
+
+	// Click on the floor to close airlocks
+	var/static/list/connections = list(
+		COMSIG_ATOM_ATTACK_HAND = PROC_REF(on_attack_hand)
+	)
+	AddElement(/datum/element/connect_loc, src, connections)
+
 	return INITIALIZE_HINT_LATELOAD
 
 /obj/machinery/door/airlock/LateInitialize()
@@ -841,6 +849,11 @@
 /obj/machinery/door/airlock/attack_paw(mob/user)
 	return attack_hand(user)
 
+/obj/machinery/door/airlock/proc/on_attack_hand(atom/source, mob/user, list/modifiers)
+	SIGNAL_HANDLER
+	INVOKE_ASYNC(src, /atom/proc/attack_hand, user, modifiers)
+	return COMPONENT_CANCEL_ATTACK_CHAIN
+
 /obj/machinery/door/airlock/attack_hand(mob/user)
 	if(SEND_SIGNAL(src, COMSIG_AIRLOCK_TOUCHED, user) & COMPONENT_PREVENT_OPEN)
 		. = TRUE
@@ -914,7 +927,7 @@
 	else
 		updateDialog()
 
-/obj/machinery/door/airlock/attackby(obj/item/C, mob/user, params)
+/obj/machinery/door/airlock/attackby(obj/item/C, mob/living/user, params)
 	if(!issilicon(user) && !IsAdminGhost(user))
 		if(isElectrified() && C?.siemens_coefficient)
 			if(shock(user, 75))
@@ -1084,7 +1097,7 @@
 		user.visible_message("<span class='notice'>[user] pins [C] to [src].</span>", "<span class='notice'>You pin [C] to [src].</span>")
 		note = C
 		update_icon()
-	else if(HAS_TRAIT(C, TRAIT_DOOR_PRYER) && user.a_intent != INTENT_HARM)
+	else if(HAS_TRAIT(C, TRAIT_DOOR_PRYER) && !user.combat_mode)
 		if(isElectrified() && C?.siemens_coefficient)
 			shock(user,100)
 
@@ -1114,35 +1127,37 @@
 	else
 		return ..()
 
-/obj/machinery/door/airlock/try_to_weld(obj/item/weldingtool/W, mob/user)
+/obj/machinery/door/airlock/try_to_weld(obj/item/weldingtool/W, mob/living/user)
 	if(!operating && density)
-		if(user.a_intent != INTENT_HELP)
+
+		if(atom_integrity < max_integrity)
 			if(protected_door || !W.tool_start_check(user, amount=0))
 				return
-			user.visible_message("[user] is [welded ? "unwelding":"welding"] the airlock.", \
-							"<span class='notice'>You begin [welded ? "unwelding":"welding"] the airlock...</span>", \
-							"<span class='italics'>You hear welding.</span>")
+			user.visible_message("<span class='notice'>[user] begins welding the airlock.</span>", \
+							"<span class='notice'>You begin repairing the airlock...</span>", \
+							"<span class='hear'>You hear welding.</span>")
 			if(W.use_tool(src, user, 40, volume=50, extra_checks = CALLBACK(src, PROC_REF(weld_checks), W, user)))
-				welded = !welded
-				user.visible_message("[user.name] has [welded? "welded shut":"unwelded"] [src].", \
-									"<span class='notice'>You [welded ? "weld the airlock shut":"unweld the airlock"].</span>")
-				log_combat(user, src, welded? "welded shut":"unwelded", important = FALSE)
-				update_icon()
+				atom_integrity = max_integrity
+				set_machine_stat(machine_stat & ~BROKEN)
+				user.visible_message("<span class='notice'>[user] finishes welding [src].</span>", \
+									"<span class='notice'>You finish repairing the airlock.</span>")
+				update_appearance()
 		else
-			if(atom_integrity < max_integrity)
-				if(!W.tool_start_check(user, amount=0))
-					return
-				user.visible_message("[user] is welding the airlock.", \
-								"<span class='notice'>You begin repairing the airlock...</span>", \
-								"<span class='italics'>You hear welding.</span>")
-				if(W.use_tool(src, user, 40, volume=50, extra_checks = CALLBACK(src, PROC_REF(weld_checks), W, user)))
-					atom_integrity = max_integrity
-					set_machine_stat(machine_stat & ~BROKEN)
-					user.visible_message("[user.name] has repaired [src].", \
-										"<span class='notice'>You finish repairing the airlock.</span>")
-					update_icon()
-			else
-				to_chat(user, "<span class='notice'>The airlock doesn't need repairing.</span>")
+			to_chat(user, "<span class='notice'>The airlock doesn't need repairing.</span>")
+
+/obj/machinery/door/airlock/try_to_weld_secondary(obj/item/weldingtool/tool, mob/user)
+	if(!tool.tool_start_check(user, amount=0))
+		return
+	user.visible_message("<span class='notice'>[user] begins [welded ? "unwelding":"welding"] the airlock.</span>", \
+		"<span class='notice'>You begin [welded ? "unwelding":"welding"] the airlock...</span>", \
+		"<span class='hear'>You hear welding.</span>")
+	if(!tool.use_tool(src, user, 40, volume=50, extra_checks = CALLBACK(src, PROC_REF(weld_checks), tool, user)))
+		return
+	welded = !welded
+	user.visible_message("<span class='notice'>[user] [welded? "welds shut":"unwelds"] [src].</span>", \
+		"<span class='notice'>You [welded ? "weld the airlock shut":"unweld the airlock"].</span>")
+	log_combat(user, tool, "[key_name(user)] [welded ? "welded":"unwelded"] airlock [src] with [tool] at [AREACOORD(src)]", important = FALSE)
+	update_appearance()
 
 /obj/machinery/door/airlock/proc/weld_checks(obj/item/weldingtool/W, mob/user)
 	return !operating && density
@@ -1667,3 +1682,25 @@
 /obj/machinery/door/airlock/proc/set_wires(wire_security_level)
 	return new /datum/wires/airlock(src, wire_security_level)
 
+/obj/machinery/door/airlock/add_context_self(datum/screentip_context/context, mob/user)
+	..()
+	if (machine_stat & BROKEN)
+		return
+	if (!hasPower())
+		context.add_left_click_tool_action("Pry Open", TOOL_CROWBAR)
+		return
+	// Handle lazy initalisation of access
+	if (length(req_access) || length(req_one_access) || req_access_txt != "0" || req_one_access_txt != "0")
+		context.add_access_context("Access Required", allowed(user))
+	context.add_left_click_tool_action("[panel_open ? "Close" : "Open"] Maintenance Panel", TOOL_SCREWDRIVER)
+	if (panel_open)
+		context.add_left_click_tool_action("Hack Wires", TOOL_MULTITOOL)
+		context.add_left_click_tool_action("Cut Wires", TOOL_WIRECUTTER)
+	if (context.accept_silicons())
+		context.add_left_click_action("Interface with", canAIControl(user))
+		context.add_shift_click_action("Open", (lights && locked) ? "Blocked" : null, (!lights || !locked) && canAIControl(user))
+		context.add_ctrl_click_action("[locked ? "Raise" : "Drop"] Bolts", "Blocked", canAIControl(user))
+		context.add_alt_click_action("[secondsElectrified ? "Un-electrify" : "Electrify"]", "Blocked", canAIControl(user))
+		context.add_ctrl_shift_click_action("[emergency ? "Disbale" : "Enable"] Emergency Access", "Blocked", canAIControl(user))
+	else
+		context.add_left_click_action("Open", (lights && locked) ? "Bolted" : null, (!lights || !locked))

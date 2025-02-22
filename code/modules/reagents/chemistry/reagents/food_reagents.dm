@@ -131,7 +131,7 @@
 		exposed_obj.visible_message(span_notice("The hot oil has no effect on [exposed_obj]!"))
 		return
 	// if we are holding an item/atom inside, we dont want to arbitrarily fry this item
-	if(SEND_SIGNAL(exposed_obj, COMSIG_CONTAINS_STORAGE))
+	if(exposed_obj.atom_storage)
 		exposed_obj.visible_message(span_notice("The hot oil splatters about as [exposed_obj] touches it. It seems too full to cook properly!"))
 		return
 
@@ -608,6 +608,20 @@
 	color = "#DFDFDF"
 	chem_flags = NONE
 	taste_description = "mayonnaise"
+
+/datum/reagent/consumable/mold // yeah, ok, togopal, I guess you could call that a condiment
+	name = "Mold"
+	description = "This condiment will make any food break the mold. Or your stomach."
+	color ="#708a88"
+	taste_description = "rancid fungus"
+	chem_flags = NONE
+
+/datum/reagent/consumable/eggrot
+	name = "Rotten Eggyolk"
+	description = "It smells absolutely dreadful."
+	color ="#708a88"
+	taste_description = "rotten eggs"
+	chem_flags = NONE
 
 /datum/reagent/consumable/tearjuice
 	name = "Tear Juice"

@@ -1,0 +1,12 @@
+{
+	"map_name": "The Torch",
+	"map_link": "Torch",
+	"map_path": "map_files/Torch",
+	"map_file": "Torch.dmm",
+	"shuttles": {
+		"cargo": "cargo_box",
+		"ferry": "ferry_fancy",
+		"whiteship": "whiteship_box",
+		"emergency": "emergency_box"
+	}
+}
